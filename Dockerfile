@@ -1,11 +1,17 @@
 # gitea act-runner 베이스
 FROM --platform=linux/amd64 gitea/act_runner:latest
 
+# glibc 설치 (Cloudflare workerd 호환)
+ENV GLIBC_VERSION=2.34-r0
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
+    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk && \
+    apk add --no-cache --force-overwrite glibc-${GLIBC_VERSION}.apk && \
+    rm glibc-${GLIBC_VERSION}.apk
+
 # 기본 유틸 + 빌드 도구 (Alpine)
 RUN apk add --no-cache \
     ca-certificates curl git unzip xz bash \
-    build-base python3 linux-headers \
-    gcompat libc6-compat
+    build-base python3 linux-headers
 
 # Node 20 LTS + corepack (pnpm 포함)
 RUN apk add --no-cache nodejs npm
