@@ -1,23 +1,25 @@
-# gitea act-runner 베이스
-FROM --platform=linux/amd64 gitea/act_runner:latest
+# Ubuntu 기반으로 시작
+FROM --platform=linux/amd64 ubuntu:22.04
 
-# glibc 설치 (Cloudflare workerd 호환)
-ENV GLIBC_VERSION=2.34-r0
-RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk && \
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk && \
-    apk add --no-cache --force-overwrite glibc-${GLIBC_VERSION}.apk glibc-bin-${GLIBC_VERSION}.apk && \
-    rm glibc-${GLIBC_VERSION}.apk glibc-bin-${GLIBC_VERSION}.apk
+# 기본 패키지 설치
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl git unzip xz-utils \
+    build-essential python3 wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# 기본 유틸 + 빌드 도구 (Alpine)
-RUN apk add --no-cache \
-    ca-certificates curl git unzip xz bash \
-    build-base python3 linux-headers \
-    libstdc++ libgcc
+# act_runner 설치
+ENV ACT_RUNNER_VERSION=0.2.13
+RUN curl -fsSL https://dl.gitea.com/act_runner/${ACT_RUNNER_VERSION}/act_runner-${ACT_RUNNER_VERSION}-linux-amd64 -o /usr/local/bin/act_runner && \
+    chmod +x /usr/local/bin/act_runner
 
 # Node 20 LTS + corepack (pnpm 포함)
-RUN apk add --no-cache nodejs npm
-RUN npm install -g corepack && corepack enable
+ENV NODE_VERSION=20.18.1
+RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz | \
+    tar -xJ -C /usr/local --strip-components=1 && \
+    node --version && \
+    npm --version && \
+    npm install -g corepack && \
+    corepack enable
 
 # 러너 작업 디렉토리/캐시
 ENV RUNNER_HOME=/data
