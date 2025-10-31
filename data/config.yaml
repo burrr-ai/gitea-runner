@@ -1,0 +1,11 @@
+log:
+  level: info
+
+runner:
+  capacity: 1
+  labels:
+    - "self-hosted"
+    - "ubuntu-latest:host"
+
+executor:
+  type: host
