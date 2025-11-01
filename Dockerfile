@@ -1,10 +1,10 @@
 # Ubuntu 기반으로 시작
 FROM --platform=linux/amd64 ubuntu:22.04
 
-# 기본 패키지 설치
+# 기본 패키지 설치 (tini 포함)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl git unzip xz-utils \
-    build-essential python3 wget \
+    build-essential python3 wget tini \
     && rm -rf /var/lib/apt/lists/*
 
 # act_runner 설치
@@ -32,4 +32,4 @@ RUN mkdir -p $RUNNER_HOME $HOME $PNPM_HOME /data/.npm
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
